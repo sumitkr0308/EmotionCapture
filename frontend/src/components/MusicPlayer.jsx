@@ -1,45 +1,33 @@
 import React, { useEffect, useRef, useState } from "react";
+import { emotionTheme } from "../theme/emotionTheme";
 
-export default function MusicPlayer({ tracks }) {
+export default function MusicPlayer({ tracks, emotion = "neutral" }) {
   const audioRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const currentTrack = tracks[currentIndex];
 
-  // Auto-play first track whenever track list updates
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [progress, setProgress] = useState(0);
+
+  const theme = emotionTheme[emotion] || emotionTheme.neutral;
+
   useEffect(() => {
-    if (tracks && tracks.length > 0) {
-      setCurrentIndex(0);
-      playTrack(0);
-    }
-  }, [tracks]);
+    if (!audioRef.current) return;
+    audioRef.current.play();
+    setIsPlaying(true);
+  }, [currentIndex]);
 
-  const playTrack = (index) => {
-    if (!tracks || tracks.length === 0) return;
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % tracks.length);
+  };
 
-    const track = tracks[index];
-    if (!track?.preview_url) return;
-
-    // Stop previous audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-
-    // Create new audio
-    const audio = new Audio(track.preview_url);
-    audioRef.current = audio;
-
-    audio
-      .play()
-      .then(() => setIsPlaying(true))
-      .catch((err) => console.error("Audio play error:", err));
-
-    setCurrentIndex(index);
+  const handlePrev = () => {
+    setCurrentIndex((prev) =>
+      prev === 0 ? tracks.length - 1 : prev - 1
+    );
   };
 
   const togglePlay = () => {
-    if (!audioRef.current) return;
-
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
@@ -49,57 +37,70 @@ export default function MusicPlayer({ tracks }) {
     }
   };
 
-  const playNext = () => {
-    const nextIndex = (currentIndex + 1) % tracks.length;
-    playTrack(nextIndex);
+  const handleProgress = () => {
+    if (!audioRef.current) return;
+    const { currentTime, duration } = audioRef.current;
+    setProgress((currentTime / duration) * 100);
   };
-
-  const playPrevious = () => {
-    const prevIndex =
-      (currentIndex - 1 + tracks.length) % tracks.length;
-    playTrack(prevIndex);
-  };
-
-  if (!tracks || tracks.length === 0) return null;
-
-  const currentTrack = tracks[currentIndex];
 
   return (
-    <div className="mt-4 p-4 bg-slate-900 rounded-xl border border-slate-700 shadow-lg">
-      {/* Album Cover */}
-      {currentTrack.album_image && (
-        <img
-          src={currentTrack.album_image}
-          alt="Album Cover"
-          className="w-24 h-24 rounded-lg mb-3 object-cover"
-        />
-      )}
+    <div
+      className={`mt-6 p-4 rounded-xl shadow-2xl border transition-all duration-500 
+      flex gap-4 items-center backdrop-blur-lg ${theme.card}`}
+    >
+      {/* Track Image */}
+      <img
+        src={currentTrack.album_image}
+        className="w-16 h-16 rounded-lg object-cover shadow-lg"
+        alt=""
+      />
 
-      {/* Track Info */}
-      <h3 className="text-lg font-semibold">{currentTrack.name}</h3>
-      <p className="text-gray-400 text-sm">{currentTrack.artists}</p>
+      {/* Track Info + Progress */}
+      <div className="flex-1">
+        <h4 className={`font-semibold ${theme.text}`}>
+          {currentTrack.name}
+        </h4>
+        <p className="text-sm text-gray-300">
+          {currentTrack.artists}
+        </p>
+
+        {/* Progress Bar */}
+        <div className="w-full h-2 bg-white/10 rounded-full mt-3 overflow-hidden">
+          <div
+            style={{ width: `${progress}%` }}
+            className={`h-full transition-all duration-200 rounded-full ${theme.button}`}
+          ></div>
+        </div>
+
+        <audio
+          ref={audioRef}
+          src={currentTrack.preview_url}
+          onTimeUpdate={handleProgress}
+          onEnded={handleNext}
+        />
+      </div>
 
       {/* Controls */}
-      <div className="mt-4 flex gap-3">
+      <div className="flex gap-3 items-center">
         <button
-          className="px-4 py-2 bg-slate-700 rounded"
-          onClick={playPrevious}
+          onClick={handlePrev}
+          className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
         >
-          Prev
+          ⏮
         </button>
 
         <button
-          className="px-4 py-2 bg-indigo-600 rounded"
           onClick={togglePlay}
+          className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition text-lg"
         >
-          {isPlaying ? "Pause" : "Play"}
+          {isPlaying ? "⏸" : "▶️"}
         </button>
 
         <button
-          className="px-4 py-2 bg-slate-700 rounded"
-          onClick={playNext}
+          onClick={handleNext}
+          className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
         >
-          Next
+          ⏭
         </button>
       </div>
     </div>

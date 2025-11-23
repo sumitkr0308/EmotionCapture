@@ -11,31 +11,20 @@ const app = express();
 // ---------------------------------------------
 // FIXED CORS FOR EXPRESS v5 / NODE 22
 // ---------------------------------------------
-const allowedOrigins = [
-  "http://localhost:5173", // Local dev environment
-  (process.env.FRONTEND_URL || "").replace(/\/$/, "") // Remove trailing slash for Vercel URL
-];
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      process.env.FRONTEND_URL
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"]
+  })
+);
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow server-to-server, mobile apps, or Postman (no origin)
-    if (!origin) return callback(null, true);
 
-    const normalized = origin.replace(/\/$/, "");
-
-    if (allowedOrigins.includes(normalized)) {
-      return callback(null, true);
-    } else {
-      console.log("❌ CORS BLOCKED:", origin);
-      return callback(new Error("Not allowed by CORS"));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true,
-  allowedHeaders: ["Content-Type", "Authorization"]
-};
-
-app.use(cors(corsOptions)); // Do NOT use app.options("*") — breaks on Node 22
 
 // ---------------------------------------------
 // Parsers
