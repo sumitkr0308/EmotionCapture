@@ -1,5 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import * as faceapi from "face-api.js";
+import { emotionTheme } from "../theme/emotionTheme";
+import { getAutoTextColor } from "../utils/getTextContrast";
 
 export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
   const videoRef = useRef(null);
@@ -11,6 +13,13 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
   const [emotion, setEmotion] = useState(null);
   const [isDetecting, setIsDetecting] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+
+  // SELECT THEME
+  const theme = emotionTheme[emotion] || emotionTheme.neutral;
+  const textColor =
+    theme.text === "auto"
+      ? getAutoTextColor(theme.background)
+      : theme.text;
 
   useEffect(() => {
     const loadModels = async () => {
@@ -29,8 +38,7 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
   }, [mode]);
 
   const startCamera = async () => {
-    stopCamera(); // prevent duplicate streams (StrictMode fix)
-
+    stopCamera();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       videoRef.current.srcObject = stream;
@@ -45,11 +53,9 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
       if (!video) return;
 
       const stream = video.srcObject;
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
+      if (stream) stream.getTracks().forEach((t) => t.stop());
 
-      video.srcObject = null; // fully detach stream
+      video.srcObject = null;
     } catch (err) {
       console.log("Failed to stop camera:", err);
     }
@@ -137,38 +143,75 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
   };
 
   return (
-    <div className="p-4 sm:p-6 bg-slate-800/40 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-700 space-y-6 w-full max-w-3xl mx-auto">
-      {/* Mode Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+    <div
+      className={`
+      p-5 sm:p-7 
+      bg-white/10 backdrop-blur-2xl 
+      rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.25)] 
+      border border-white/10 space-y-6 
+      w-full max-w-3xl mx-auto 
+      transition-all
+    `}
+    >
+      {/* MODE BUTTONS */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <button
           onClick={() => setMode("upload")}
-          className={`px-4 py-2 rounded-lg text-sm sm:text-base w-full sm:w-auto ${
-            mode === "upload" ? "bg-indigo-600" : "bg-slate-700"
-          }`}
+          className={`
+            px-5 py-2.5 rounded-xl
+            text-sm font-semibold w-full sm:w-auto 
+            shadow-md transition-all
+            ${
+              mode === "upload"
+                ? "bg-indigo-600 text-white shadow-indigo-500/40"
+                : "bg-white/10 hover:bg-white/20"
+            }
+            ${textColor}
+          `}
         >
           Upload Photo
         </button>
+
         <button
           onClick={() => setMode("camera")}
-          className={`px-4 py-2 rounded-lg text-sm sm:text-base w-full sm:w-auto ${
-            mode === "camera" ? "bg-indigo-600" : "bg-slate-700"
-          }`}
+          className={`
+            px-5 py-2.5 rounded-xl
+            text-sm font-semibold w-full sm:w-auto 
+            shadow-md transition-all
+            ${
+              mode === "camera"
+                ? "bg-indigo-600 text-white shadow-indigo-500/40"
+                : "bg-white/10 hover:bg-white/20"
+            }
+            ${textColor}
+          `}
         >
           Use Camera
         </button>
       </div>
 
-      {/* Upload */}
+      {/* UPLOAD MODE */}
       {mode === "upload" && (
-        <div className="space-y-4 text-center w-full">
-          {/* Upload Box */}
+        <div className="space-y-5 text-center">
           <label className="block cursor-pointer">
-            <div className="w-full max-w-md mx-auto p-6 border-2 border-dashed border-indigo-400/40 rounded-2xl bg-white/5 hover:bg-white/10 transition-all shadow-lg">
-              <p className="text-sm text-indigo-300 font-medium">
+            <div
+              className={`
+              w-full max-w-md mx-auto p-6
+              border-2 border-dashed 
+              rounded-2xl bg-white/10 hover:bg-white/20 
+              transition-all shadow-lg
+              border-indigo-400/40
+              ${textColor}
+            `}
+            >
+              <p className={`${textColor} text-sm font-medium`}>
                 Click to upload an image
               </p>
-              <p className="text-xs text-gray-400 mt-1">JPG, PNG supported</p>
+              <p className="text-xs mt-2 text-gray-300">
+                JPG • PNG supported
+              </p>
             </div>
+
             <input
               type="file"
               accept="image/*"
@@ -177,14 +220,16 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
             />
           </label>
 
-          {/* Placeholder Preview */}
           {!imageLoaded && (
             <div className="w-full max-w-sm mx-auto">
               <img
                 src="/happy.jpg"
-                className="rounded-xl opacity-70 w-full shadow-lg border border-white/10"
+                className="
+                  rounded-xl opacity-70 w-full 
+                  shadow-xl border border-white/10
+                "
               />
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-gray-300 mt-2">
                 Your uploaded image will appear here
               </p>
             </div>
@@ -192,41 +237,57 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
         </div>
       )}
 
-      {/* Camera */}
+      {/* CAMERA MODE */}
       {mode === "camera" && (
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center space-y-3">
           <video
             ref={videoRef}
             autoPlay
-            className="rounded-xl border shadow-md w-full max-w-lg"
+            className="
+              rounded-xl border border-white/10 
+              shadow-lg w-full max-w-lg
+            "
           />
+
           <button
             onClick={capturePhoto}
-            className="mt-3 px-4 py-2 bg-green-600 rounded-lg text-sm sm:text-base"
+            className="
+              mt-2 px-5 py-2.5 bg-green-600 
+              rounded-xl text-sm shadow-green-500/40 
+              hover:bg-green-500 transition-all
+            "
           >
-            Capture
+            Capture Photo
           </button>
         </div>
       )}
 
-      {/* Image + Canvas */}
-      <div className="relative w-full mx-auto max-w-xl">
-        <img ref={imgRef} className="rounded-lg shadow-lg w-full" />
+      {/* IMAGE + CANVAS */}
+      <div className="relative w-full max-w-xl mx-auto">
+        <img ref={imgRef} className="rounded-xl shadow-xl w-full" />
         <canvas
           ref={canvasRef}
-          className="absolute top-0 left-0 w-full h-full pointer-events-none"
+          className="absolute inset-0 w-full h-full pointer-events-none"
         />
       </div>
 
       {isDetecting && (
-        <p className="text-indigo-300 animate-pulse text-center text-sm sm:text-base">
+        <p className={`animate-pulse text-center text-sm ${textColor}`}>
           Detecting emotion…
         </p>
       )}
 
       {emotion && (
-        <p className="text-center text-lg sm:text-xl font-semibold text-white">
-          Emotion: <span className="text-indigo-400 capitalize">{emotion}</span>
+        <p
+          className={`
+          text-center text-lg font-semibold 
+          ${textColor}
+        `}
+        >
+          Emotion:
+          <span className="capitalize ml-2 text-indigo-300">
+            {emotion}
+          </span>
         </p>
       )}
 

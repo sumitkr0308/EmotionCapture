@@ -1,5 +1,6 @@
 import React from "react";
 import { emotionTheme } from "../theme/emotionTheme";
+import { getAutoTextColor } from "../utils/getTextContrast";
 
 export default function ExerciseCard({ emotion }) {
   const map = {
@@ -37,28 +38,50 @@ export default function ExerciseCard({ emotion }) {
   const exercises = map[emotion] || map.neutral;
   const theme = emotionTheme[emotion] || emotionTheme.neutral;
 
+  const titleColor =
+    theme.text === "auto"
+      ? getAutoTextColor(theme.background)
+      : theme.text;
+
+  const descColor =
+    theme.text === "auto"
+      ? getAutoTextColor(theme.background, 0.7) // slightly dimmer version
+      : "text-gray-300";
+
   return (
     <div className="space-y-4">
       {exercises.map((e, i) => (
         <div
           key={i}
-          className={`p-5 rounded-2xl bg-white/5 border shadow-2xl backdrop-blur-lg 
-          flex items-center gap-5 transition-all duration-300 cursor-pointer
-          hover:bg-white/10 hover:shadow-[0_0_20px_rgba(255,255,255,0.12)]
-          hover:scale-[1.03] ${theme.card}`}
-          style={{ borderColor: "rgba(255,255,255,0.12)" }}
+          className={` 
+            p-5 rounded-2xl 
+            bg-white/10 backdrop-blur-xl 
+            border border-white/10 
+            shadow-[0_8px_25px_rgba(0,0,0,0.25)] 
+            flex items-center gap-5
+            transition-all duration-300 cursor-pointer
+            hover:bg-white/20 hover:shadow-[0_12px_35px_rgba(0,0,0,0.35)]
+            hover:scale-[1.03]
+            ${theme.card}
+          `}
         >
           {/* Icon */}
           <div className="text-4xl sm:text-5xl drop-shadow-lg">
             {e.icon}
           </div>
 
-          {/* Exercise Info */}
+          {/* Exercise Text */}
           <div className="flex flex-col">
-            <span className={`font-semibold text-lg sm:text-xl ${theme.text}`}>
+            <span
+              className={`
+                font-semibold text-lg sm:text-xl tracking-wide
+                ${titleColor}
+              `}
+            >
               {e.name}
             </span>
-            <span className="text-gray-300 text-sm sm:text-base leading-snug">
+
+            <span className={`${descColor} text-sm sm:text-base leading-snug`}>
               {e.desc}
             </span>
           </div>

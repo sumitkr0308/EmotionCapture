@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { emotionTheme } from "../theme/emotionTheme";
+import { getAutoTextColor } from "../utils/getTextContrast";
 
 export default function MusicPlayer({ tracks, emotion = "neutral" }) {
   const audioRef = useRef(null);
@@ -10,6 +11,10 @@ export default function MusicPlayer({ tracks, emotion = "neutral" }) {
   const [progress, setProgress] = useState(0);
 
   const theme = emotionTheme[emotion] || emotionTheme.neutral;
+  const textColor =
+    theme.text === "auto"
+      ? getAutoTextColor(theme.background)
+      : theme.text;
 
   useEffect(() => {
     if (!audioRef.current) return;
@@ -22,7 +27,9 @@ export default function MusicPlayer({ tracks, emotion = "neutral" }) {
   };
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev === 0 ? tracks.length - 1 : prev - 1));
+    setCurrentIndex((prev) =>
+      prev === 0 ? tracks.length - 1 : prev - 1
+    );
   };
 
   const togglePlay = () => {
@@ -43,59 +50,89 @@ export default function MusicPlayer({ tracks, emotion = "neutral" }) {
 
   return (
     <div
-      className={`mt-6 p-5 sm:p-6 rounded-2xl shadow-2xl border border-white/10
-      flex flex-col sm:flex-row items-center gap-5 sm:gap-6
-      backdrop-blur-xl bg-white/5 transition-all ${theme.card}`}
+      className="
+        mt-5 p-5 sm:p-6 rounded-2xl 
+        border border-white/10 
+        bg-white/10 backdrop-blur-xl
+        shadow-[0_8px_30px_rgba(0,0,0,0.25)]
+        flex flex-col gap-4 transition-all
+      "
     >
-      {/* Album Art */}
-      <img
-        src={currentTrack.album_image}
-        className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover shadow-xl"
-        alt=""
-      />
-
-      {/* Right Section */}
-      <div className="flex-1 w-full">
-        <h4 className={`font-semibold text-lg sm:text-xl ${theme.text}`}>
-          {currentTrack.name}
-        </h4>
-        <p className="text-sm text-gray-300 mt-0.5">{currentTrack.artists}</p>
-
-        {/* Progress Bar */}
-        <div className="w-full h-2 bg-white/10 rounded-full mt-4 overflow-hidden shadow-inner">
-          <div
-            style={{ width: `${progress}%` }}
-            className={`h-full transition-all duration-200 ${theme.button}`}
-          ></div>
-        </div>
-
-        <audio
-          ref={audioRef}
-          src={currentTrack.preview_url}
-          onTimeUpdate={handleProgress}
-          onEnded={handleNext}
+      {/* Cover + Info */}
+      <div className="flex items-center gap-4">
+        <img
+          src={currentTrack.album_image}
+          alt="album"
+          className="
+            w-16 h-16 sm:w-20 sm:h-20 
+            rounded-xl object-cover 
+            shadow-[0_6px_20px_rgba(0,0,0,0.3)]
+          "
         />
+
+        <div className="flex-1">
+          <h4
+            className={`
+              font-semibold text-lg sm:text-xl 
+              tracking-wide 
+              ${textColor}
+            `}
+          >
+            {currentTrack.name}
+          </h4>
+
+          <p className="text-gray-300 text-sm opacity-80">
+            {currentTrack.artists}
+          </p>
+
+          {/* Progress Bar */}
+          <div className="w-full h-2 bg-white/10 rounded-full mt-3 overflow-hidden shadow-inner">
+            <div
+              style={{ width: `${progress}%` }}
+              className={`h-full transition-all duration-200 ${theme.button}`}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Player Controls */}
-      <div className="flex items-center gap-4 sm:gap-5">
+      <audio
+        ref={audioRef}
+        src={currentTrack.preview_url}
+        onTimeUpdate={handleProgress}
+        onEnded={handleNext}
+      />
+
+      {/* Controls Inside Card */}
+      <div className="flex items-center justify-center gap-6 mt-2">
         <button
           onClick={handlePrev}
-          className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-all shadow-md text-lg"
+          className="
+            p-3 rounded-full bg-white/10 
+            hover:bg-white/20 transition shadow-md 
+            text-lg
+          "
         >
           ⏮
         </button>
 
         <button
           onClick={togglePlay}
-          className="p-4 rounded-full bg-white/10 hover:bg-white/20 transition-all shadow-md text-2xl"
+          className="
+            p-4 rounded-full bg-white/10 
+            hover:bg-white/20 transition shadow-md 
+            text-2xl
+          "
         >
           {isPlaying ? "⏸" : "▶"}
         </button>
 
         <button
           onClick={handleNext}
-          className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-all shadow-md text-lg"
+          className="
+            p-3 rounded-full bg-white/10 
+            hover:bg-white/20 transition shadow-md 
+            text-lg
+          "
         >
           ⏭
         </button>
