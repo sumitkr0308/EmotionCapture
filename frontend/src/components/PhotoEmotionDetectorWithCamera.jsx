@@ -12,7 +12,6 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
   const [isDetecting, setIsDetecting] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  // Load models
   useEffect(() => {
     const loadModels = async () => {
       await Promise.all([
@@ -24,13 +23,14 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
     loadModels();
   }, []);
 
-  // Toggle camera
   useEffect(() => {
     if (mode === "camera") startCamera();
     else stopCamera();
   }, [mode]);
 
   const startCamera = async () => {
+    stopCamera(); // prevent duplicate streams (StrictMode fix)
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       videoRef.current.srcObject = stream;
@@ -40,11 +40,21 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
   };
 
   const stopCamera = () => {
-    const stream = videoRef.current?.srcObject;
-    if (stream) stream.getTracks().forEach((t) => t.stop());
+    try {
+      const video = videoRef.current;
+      if (!video) return;
+
+      const stream = video.srcObject;
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+
+      video.srcObject = null; // fully detach stream
+    } catch (err) {
+      console.log("Failed to stop camera:", err);
+    }
   };
 
-  // Capture
   const capturePhoto = () => {
     const video = videoRef.current;
     const temp = captureCanvasRef.current;
@@ -62,7 +72,6 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
     };
   };
 
-  // Upload
   const uploadPhoto = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -74,14 +83,12 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
     };
   };
 
-  // Detect Emotion
   const detectEmotion = async () => {
     setIsDetecting(true);
 
     const img = imgRef.current;
     const canvas = canvasRef.current;
 
-    // FIX: correct canvas size
     canvas.width = img.clientWidth || img.naturalWidth;
     canvas.height = img.clientHeight || img.naturalHeight;
 
@@ -102,7 +109,6 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
       return;
     }
 
-    // Draw
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -113,7 +119,6 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
 
     faceapi.draw.drawDetections(canvas, resized);
 
-    // Pick emotion
     const exp = detection.expressions;
     const bestEmotion = Object.keys(exp).reduce((a, b) =>
       exp[a] > exp[b] ? a : b
@@ -124,8 +129,6 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
 
     ctx.font = "22px Poppins";
     ctx.fillStyle = "yellow";
-
-    // FIXED label position
     ctx.fillText(
       bestEmotion,
       resized.detection.box.x,
@@ -134,13 +137,12 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
   };
 
   return (
-    <div className="p-6 bg-slate-800/40 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-700 space-y-6">
-
-      {/* Mode */}
-      <div className="flex gap-4">
+    <div className="p-4 sm:p-6 bg-slate-800/40 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-700 space-y-6 w-full max-w-3xl mx-auto">
+      {/* Mode Buttons */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
         <button
           onClick={() => setMode("upload")}
-          className={`px-4 py-2 rounded-lg ${
+          className={`px-4 py-2 rounded-lg text-sm sm:text-base w-full sm:w-auto ${
             mode === "upload" ? "bg-indigo-600" : "bg-slate-700"
           }`}
         >
@@ -148,7 +150,7 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
         </button>
         <button
           onClick={() => setMode("camera")}
-          className={`px-4 py-2 rounded-lg ${
+          className={`px-4 py-2 rounded-lg text-sm sm:text-base w-full sm:w-auto ${
             mode === "camera" ? "bg-indigo-600" : "bg-slate-700"
           }`}
         >
@@ -158,22 +160,49 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
 
       {/* Upload */}
       {mode === "upload" && (
-        <div className="space-y-2">
-          <input type="file" accept="image/*" onChange={uploadPhoto} />
+        <div className="space-y-4 text-center w-full">
+          {/* Upload Box */}
+          <label className="block cursor-pointer">
+            <div className="w-full max-w-md mx-auto p-6 border-2 border-dashed border-indigo-400/40 rounded-2xl bg-white/5 hover:bg-white/10 transition-all shadow-lg">
+              <p className="text-sm text-indigo-300 font-medium">
+                Click to upload an image
+              </p>
+              <p className="text-xs text-gray-400 mt-1">JPG, PNG supported</p>
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={uploadPhoto}
+              className="hidden"
+            />
+          </label>
 
+          {/* Placeholder Preview */}
           {!imageLoaded && (
-            <img src="/happy.jpg" className="rounded-xl opacity-60" />
+            <div className="w-full max-w-sm mx-auto">
+              <img
+                src="/happy.jpg"
+                className="rounded-xl opacity-70 w-full shadow-lg border border-white/10"
+              />
+              <p className="text-xs text-gray-400 mt-2">
+                Your uploaded image will appear here
+              </p>
+            </div>
           )}
         </div>
       )}
 
       {/* Camera */}
       {mode === "camera" && (
-        <div>
-          <video ref={videoRef} autoPlay className="rounded-xl border shadow-md w-full" />
+        <div className="flex flex-col items-center">
+          <video
+            ref={videoRef}
+            autoPlay
+            className="rounded-xl border shadow-md w-full max-w-lg"
+          />
           <button
             onClick={capturePhoto}
-            className="mt-3 px-4 py-2 bg-green-600 rounded-lg"
+            className="mt-3 px-4 py-2 bg-green-600 rounded-lg text-sm sm:text-base"
           >
             Capture
           </button>
@@ -181,15 +210,22 @@ export default function PhotoEmotionDetectorWithCamera({ onEmotionDetected }) {
       )}
 
       {/* Image + Canvas */}
-      <div className="relative w-full max-w-xl mx-auto">
+      <div className="relative w-full mx-auto max-w-xl">
         <img ref={imgRef} className="rounded-lg shadow-lg w-full" />
-        <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full pointer-events-none" />
+        <canvas
+          ref={canvasRef}
+          className="absolute top-0 left-0 w-full h-full pointer-events-none"
+        />
       </div>
 
-      {isDetecting && <p className="text-indigo-300 animate-pulse text-center">Detecting emotion…</p>}
+      {isDetecting && (
+        <p className="text-indigo-300 animate-pulse text-center text-sm sm:text-base">
+          Detecting emotion…
+        </p>
+      )}
 
       {emotion && (
-        <p className="text-center text-xl font-semibold text-white">
+        <p className="text-center text-lg sm:text-xl font-semibold text-white">
           Emotion: <span className="text-indigo-400 capitalize">{emotion}</span>
         </p>
       )}

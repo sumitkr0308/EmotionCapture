@@ -13,7 +13,7 @@ export default function MusicSuggestions({ emotion }) {
     sad: "shadow-blue-400/40",
     angry: "shadow-red-400/40",
     fearful: "shadow-purple-400/40",
-    neutral: "shadow-gray-300/40"
+    neutral: "shadow-gray-300/40",
   };
 
   useEffect(() => {
@@ -26,7 +26,9 @@ export default function MusicSuggestions({ emotion }) {
       setLoading(true);
       setWarning("");
       const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/spotify/playlist?mood=${emotionKeyword}`
+        `${
+          import.meta.env.VITE_BACKEND_URL
+        }/api/spotify/playlist?mood=${emotionKeyword}`
       );
 
       const data = await res.json();
@@ -34,7 +36,9 @@ export default function MusicSuggestions({ emotion }) {
       setLoading(false);
 
       if (data.length === 0) {
-        setWarning("No playable music found for this emotion. Try another emotion!");
+        setWarning(
+          "No playable music found for this emotion. Try another emotion!"
+        );
       }
     } catch (err) {
       console.error("Error fetching playlists:", err);
@@ -67,28 +71,28 @@ export default function MusicSuggestions({ emotion }) {
   };
 
   return (
-    <div className="text-white">
-    
-
+    <div className="text-white w-full max-w-4xl mx-auto px-3 sm:px-4 lg:px-0">
       {/* Loading */}
       {loading && (
-        <div className="animate-pulse text-gray-400">Searching playlists...</div>
+        <div className="animate-pulse text-gray-400 text-sm sm:text-base">
+          Searching playlists...
+        </div>
       )}
 
       {/* Warning */}
       {warning && (
-        <p className="text-red-400 text-sm mb-3">{warning}</p>
+        <p className="text-red-400 text-xs sm:text-sm mb-3">{warning}</p>
       )}
 
-      {/* Spotify Style Playlist Cards */}
-      <div className="space-y-4">
+      {/* Playlist Cards */}
+      <div className="space-y-4 mt-2">
         {playlists.map((p) => (
           <div
             key={p.id}
-            className={`group relative p-4 rounded-xl flex gap-4 border border-white/10 bg-white/5 backdrop-blur-sm shadow-xl hover:bg-white/10 hover:scale-[1.01] transition-all duration-300 ${emotionColors[emotion]}`}
+            className={`group relative p-4 sm:p-5 rounded-xl flex flex-col sm:flex-row gap-4 border border-white/10 bg-white/5 backdrop-blur-sm shadow-xl hover:bg-white/10 hover:scale-[1.01] transition-all duration-300 ${emotionColors[emotion]}`}
           >
             {/* Album Art */}
-            <div className="w-20 h-20 rounded-md overflow-hidden shadow-md flex-shrink-0">
+            <div className="w-24 h-24 sm:w-20 sm:h-20 rounded-md overflow-hidden shadow-md flex-shrink-0 mx-auto sm:mx-0">
               <img
                 src={p.images?.[0]?.url}
                 alt="Playlist cover"
@@ -96,24 +100,23 @@ export default function MusicSuggestions({ emotion }) {
               />
             </div>
 
-            {/* Right Section */}
-            <div className="flex flex-col justify-between flex-1">
+            {/* Playlist Info */}
+            <div className="flex flex-col justify-between flex-1 text-center sm:text-left">
               <div>
-                <h3 className="font-semibold text-lg leading-tight text-white">
+                <h3 className="font-semibold text-lg sm:text-xl leading-tight text-white">
                   {p.name}
                 </h3>
-                <p className="text-xs text-gray-300 mt-1 line-clamp-2">
+                <p className="text-xs sm:text-sm text-gray-300 mt-1 line-clamp-2">
                   {p.description}
                 </p>
               </div>
 
               {/* Buttons Row */}
-              <div className="flex items-center justify-start gap-4 mt-4 flex-nowrap w-full">
-
-                {/* Spotify Green Preview Button */}
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-4">
+                {/* Preview Button */}
                 <button
                   onClick={() => playFromPlaylist(p.id)}
-                  className="px-5 py-2.5 rounded-full bg-[#1DB954] text-black font-semibold flex items-center gap-1 hover:bg-[#1ed760] transition-all"
+                  className="px-4 sm:px-5 py-2 rounded-full bg-[#1DB954] text-black font-semibold text-sm sm:text-base hover:bg-[#1ed760] transition-all"
                   disabled={trackLoading}
                 >
                   ▶ Preview
@@ -124,20 +127,19 @@ export default function MusicSuggestions({ emotion }) {
                   href={`https://open.spotify.com/playlist/${p.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-5 py-2.5 rounded-full bg-white/10 border border-white/20 text-white flex items-center gap-1 hover:bg-white/20 transition-all"
+                  className="px-4 sm:px-5 py-2 rounded-full bg-white/10 border border-white/20 text-white text-sm sm:text-base hover:bg-white/20 transition-all"
                 >
                   🎧 Open
                 </a>
-
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Music Player */}
+      {/* Sticky Music Player */}
       {tracks.length > 0 && (
-        <div className="sticky bottom-5">
+        <div className="sticky bottom-5 w-full max-w-3xl mx-auto mt-6">
           <MusicPlayer tracks={tracks} emotion={emotion} />
         </div>
       )}

@@ -38,24 +38,29 @@ export default function ExerciseCard({ emotion }) {
   const theme = emotionTheme[emotion] || emotionTheme.neutral;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {exercises.map((e, i) => (
         <div
           key={i}
-          className={`p-4 rounded-xl bg-white/5 border backdrop-blur-md shadow-xl hover:scale-[1.02] hover:bg-white/10 transition-all duration-300 cursor-pointer flex items-center gap-4`}
-          style={{
-            borderColor: "rgba(255,255,255,0.08)",
-          }}
+          className={`p-5 rounded-2xl bg-white/5 border shadow-2xl backdrop-blur-lg 
+          flex items-center gap-5 transition-all duration-300 cursor-pointer
+          hover:bg-white/10 hover:shadow-[0_0_20px_rgba(255,255,255,0.12)]
+          hover:scale-[1.03] ${theme.card}`}
+          style={{ borderColor: "rgba(255,255,255,0.12)" }}
         >
           {/* Icon */}
-          <div className="text-3xl">
+          <div className="text-4xl sm:text-5xl drop-shadow-lg">
             {e.icon}
           </div>
 
           {/* Exercise Info */}
           <div className="flex flex-col">
-            <span className={`font-semibold text-lg ${theme.text}`}>{e.name}</span>
-            <span className="text-gray-300 text-sm">{e.desc}</span>
+            <span className={`font-semibold text-lg sm:text-xl ${theme.text}`}>
+              {e.name}
+            </span>
+            <span className="text-gray-300 text-sm sm:text-base leading-snug">
+              {e.desc}
+            </span>
           </div>
         </div>
       ))}

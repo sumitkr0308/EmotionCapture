@@ -22,9 +22,7 @@ export default function MusicPlayer({ tracks, emotion = "neutral" }) {
   };
 
   const handlePrev = () => {
-    setCurrentIndex((prev) =>
-      prev === 0 ? tracks.length - 1 : prev - 1
-    );
+    setCurrentIndex((prev) => (prev === 0 ? tracks.length - 1 : prev - 1));
   };
 
   const togglePlay = () => {
@@ -45,30 +43,29 @@ export default function MusicPlayer({ tracks, emotion = "neutral" }) {
 
   return (
     <div
-      className={`mt-6 p-4 rounded-xl shadow-2xl border transition-all duration-500 
-      flex gap-4 items-center backdrop-blur-lg ${theme.card}`}
+      className={`mt-6 p-5 sm:p-6 rounded-2xl shadow-2xl border border-white/10
+      flex flex-col sm:flex-row items-center gap-5 sm:gap-6
+      backdrop-blur-xl bg-white/5 transition-all ${theme.card}`}
     >
-      {/* Track Image */}
+      {/* Album Art */}
       <img
         src={currentTrack.album_image}
-        className="w-16 h-16 rounded-lg object-cover shadow-lg"
+        className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover shadow-xl"
         alt=""
       />
 
-      {/* Track Info + Progress */}
-      <div className="flex-1">
-        <h4 className={`font-semibold ${theme.text}`}>
+      {/* Right Section */}
+      <div className="flex-1 w-full">
+        <h4 className={`font-semibold text-lg sm:text-xl ${theme.text}`}>
           {currentTrack.name}
         </h4>
-        <p className="text-sm text-gray-300">
-          {currentTrack.artists}
-        </p>
+        <p className="text-sm text-gray-300 mt-0.5">{currentTrack.artists}</p>
 
         {/* Progress Bar */}
-        <div className="w-full h-2 bg-white/10 rounded-full mt-3 overflow-hidden">
+        <div className="w-full h-2 bg-white/10 rounded-full mt-4 overflow-hidden shadow-inner">
           <div
             style={{ width: `${progress}%` }}
-            className={`h-full transition-all duration-200 rounded-full ${theme.button}`}
+            className={`h-full transition-all duration-200 ${theme.button}`}
           ></div>
         </div>
 
@@ -80,25 +77,25 @@ export default function MusicPlayer({ tracks, emotion = "neutral" }) {
         />
       </div>
 
-      {/* Controls */}
-      <div className="flex gap-3 items-center">
+      {/* Player Controls */}
+      <div className="flex items-center gap-4 sm:gap-5">
         <button
           onClick={handlePrev}
-          className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+          className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-all shadow-md text-lg"
         >
           ⏮
         </button>
 
         <button
           onClick={togglePlay}
-          className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition text-lg"
+          className="p-4 rounded-full bg-white/10 hover:bg-white/20 transition-all shadow-md text-2xl"
         >
-          {isPlaying ? "⏸" : "▶️"}
+          {isPlaying ? "⏸" : "▶"}
         </button>
 
         <button
           onClick={handleNext}
-          className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+          className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-all shadow-md text-lg"
         >
           ⏭
         </button>
