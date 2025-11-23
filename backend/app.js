@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
@@ -9,27 +8,55 @@ const spotifyRoutes = require("./routes/spotify");
 
 const app = express();
 
-// allow only your frontend (replace with your actual Vercel URL)
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+// ---------------------------------------------
+// CORS (Localhost + Vercel Production)
+// ---------------------------------------------
+const allowedOrigins = [
+  "http://localhost:5173", // Local development (Vite)
+  (process.env.FRONTEND_URL || "").replace(/\/$/, "") // Remove trailing slash if added
+];
 
-app.use(
-  cors({
-    origin: FRONTEND_URL,
-    methods: "GET,POST,PUT,DELETE,OPTIONS",
-    credentials: true,
-  })
-);
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // Postman, mobile, etc.
 
+    const normalizedOrigin = origin.replace(/\/$/, "");
+
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      callback(null, true);
+    } else {
+      console.log("❌ CORS BLOCKED origin:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"]
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Preflight
+
+// ---------------------------------------------
+// Parsers
+// ---------------------------------------------
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// health check
+// ---------------------------------------------
+// Health Check
+// ---------------------------------------------
 app.get("/", (req, res) => res.send("API is up"));
 
-// ROUTES
+// ---------------------------------------------
+// Routes
+// ---------------------------------------------
 app.use("/api/emotions", emotionRoutes);
 app.use("/api/spotify", spotifyRoutes);
 
+// ---------------------------------------------
+// Start Server
+// ---------------------------------------------
 const PORT = process.env.PORT || 5000;
 const MONGO = process.env.MONGO_URL;
 
@@ -37,6 +64,6 @@ mongoose
   .connect(MONGO)
   .then(() => {
     console.log("Connected to MongoDB");
-    app.listen(PORT, () => console.log(`Server running on Port ${PORT}`));
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   })
   .catch((err) => console.log("MongoDB Error:", err.message));
