@@ -13,21 +13,32 @@ exports.getSpotifyToken = async () => {
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
 
-  const token = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+  if (!clientId || !clientSecret) {
+    console.log("❌ Spotify ENV Missing:", { clientId, clientSecret });
+    throw new Error("Spotify credentials missing");
+  }
 
-  const res = await axios.post(
-    "https://accounts.spotify.com/api/token",
-    "grant_type=client_credentials",
-    {
-      headers: {
-        Authorization: `Basic ${token}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    }
-  );
+  const basic = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
 
-  cachedToken = res.data.access_token;
-  expiresAt = now + res.data.expires_in * 1000;
+  try {
+    const res = await axios.post(
+      "https://accounts.spotify.com/api/token",
+      "grant_type=client_credentials",
+      {
+        headers: {
+          Authorization: `Basic ${basic}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
 
-  return cachedToken;
+    cachedToken = res.data.access_token;
+    expiresAt = now + res.data.expires_in * 1000;
+
+    return cachedToken;
+  } catch (err) {
+    console.log("❌ Spotify token error:", err.response?.data || err.message);
+    return null;
+  }
 };
+
