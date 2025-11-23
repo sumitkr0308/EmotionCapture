@@ -9,24 +9,25 @@ const spotifyRoutes = require("./routes/spotify");
 const app = express();
 
 // ---------------------------------------------
-// CORS (Localhost + Vercel Production)
+// FIXED CORS FOR EXPRESS v5 / NODE 22
 // ---------------------------------------------
 const allowedOrigins = [
-  "http://localhost:5173", // Local development (Vite)
-  (process.env.FRONTEND_URL || "").replace(/\/$/, "") // Remove trailing slash if added
+  "http://localhost:5173", // Local dev environment
+  (process.env.FRONTEND_URL || "").replace(/\/$/, "") // Remove trailing slash for Vercel URL
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // Postman, mobile, etc.
+    // Allow server-to-server, mobile apps, or Postman (no origin)
+    if (!origin) return callback(null, true);
 
-    const normalizedOrigin = origin.replace(/\/$/, "");
+    const normalized = origin.replace(/\/$/, "");
 
-    if (allowedOrigins.includes(normalizedOrigin)) {
-      callback(null, true);
+    if (allowedOrigins.includes(normalized)) {
+      return callback(null, true);
     } else {
-      console.log("❌ CORS BLOCKED origin:", origin);
-      callback(new Error("Not allowed by CORS"));
+      console.log("❌ CORS BLOCKED:", origin);
+      return callback(new Error("Not allowed by CORS"));
     }
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -34,8 +35,7 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"]
 };
 
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // Preflight
+app.use(cors(corsOptions)); // Do NOT use app.options("*") — breaks on Node 22
 
 // ---------------------------------------------
 // Parsers
@@ -49,7 +49,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.get("/", (req, res) => res.send("API is up"));
 
 // ---------------------------------------------
-// Routes
+// API Routes
 // ---------------------------------------------
 app.use("/api/emotions", emotionRoutes);
 app.use("/api/spotify", spotifyRoutes);
