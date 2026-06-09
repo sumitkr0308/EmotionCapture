@@ -19,6 +19,17 @@ export default function MusicSuggestions({ emotion }) {
   );
   const mutedTextColor = isBrightTheme ? "text-gray-800/80" : "text-white/80";
 
+  const fallbackAccent =
+    emotion === "happy"
+      ? "from-amber-300/40 to-orange-300/25"
+      : emotion === "sad"
+        ? "from-blue-300/30 to-indigo-300/20"
+        : emotion === "angry"
+          ? "from-red-300/35 to-rose-300/20"
+          : emotion === "fearful"
+            ? "from-purple-300/30 to-violet-300/20"
+            : "from-slate-300/30 to-sky-300/20";
+
   const emotionColors = {
     happy: "shadow-yellow-400/40",
     sad: "shadow-blue-400/40",
@@ -120,23 +131,46 @@ export default function MusicSuggestions({ emotion }) {
           <div
             key={p.id}
             className={`
-              group relative p-4 sm:p-5 rounded-2xl 
-              flex flex-col sm:flex-row gap-5 
+              group relative overflow-hidden p-4 sm:p-5 rounded-[1.5rem]
+              flex flex-col sm:flex-row gap-4 sm:gap-5
               border border-white/10 bg-white/10 backdrop-blur-xl
-              shadow-[0_10px_30px_rgba(0,0,0,0.25)]
-              hover:bg-white/20 hover:shadow-[0_15px_40px_rgba(0,0,0,0.3)]
-              hover:scale-[1.015]
+              shadow-[0_10px_30px_rgba(0,0,0,0.18)]
+              hover:bg-white/15 hover:shadow-[0_16px_40px_rgba(0,0,0,0.24)]
               transition-all duration-300
               ${emotionColors[emotion]}
             `}
           >
-            {/* Video Thumbnail */}
-            <div className="w-20 h-20 sm:w-18 sm:h-18 rounded-xl overflow-hidden shadow-md flex-shrink-0 mx-auto sm:mx-0">
-              <img
-                src={p.thumbnail}
-                alt="Video thumbnail"
-                className="w-full h-full object-cover"
+            {p.youtubeId ? null : (
+              <div
+                className={`absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${fallbackAccent} opacity-90`}
               />
+            )}
+
+            {/* Video Thumbnail */}
+            <div className="w-full sm:w-24 flex-shrink-0 mx-auto sm:mx-0">
+              {p.youtubeId && p.thumbnail ? (
+                <img
+                  src={p.thumbnail}
+                  alt="Video thumbnail"
+                  className="w-full h-28 sm:h-24 rounded-2xl object-cover shadow-[0_8px_20px_rgba(0,0,0,0.22)]"
+                />
+              ) : (
+                <div
+                  className={`
+                    w-full h-28 sm:h-24 rounded-2xl
+                    bg-gradient-to-br ${fallbackAccent}
+                    border border-white/10 shadow-[0_8px_20px_rgba(0,0,0,0.16)]
+                    flex items-center justify-center
+                  `}
+                >
+                  <div className="text-center">
+                    <div className="text-lg font-black text-white/95">YT</div>
+                    <div className="text-[11px] uppercase tracking-[0.2em] text-white/70">
+                      Search
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Video Info */}
@@ -185,21 +219,22 @@ export default function MusicSuggestions({ emotion }) {
                   </a>
                 )}
 
-                {/* YouTube */}
-                <a
-                  href={p.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`
-                    px-4 py-2 rounded-full bg-white/10 
-                    border border-white/20 
-                    hover:bg-white/20 transition-all 
-                    shadow-md text-sm sm:text-base
-                    ${isBrightTheme ? "text-gray-900" : textColor}
-                  `}
-                >
-                  ▶ Open
-                </a>
+                {p.youtubeId ? (
+                  <a
+                    href={p.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`
+                      px-4 py-2 rounded-full bg-white/10 
+                      border border-white/20 
+                      hover:bg-white/20 transition-all 
+                      shadow-md text-sm sm:text-base
+                      ${isBrightTheme ? "text-gray-900" : textColor}
+                    `}
+                  >
+                    ▶ Open
+                  </a>
+                ) : null}
               </div>
             </div>
           </div>

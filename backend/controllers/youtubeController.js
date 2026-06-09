@@ -158,7 +158,7 @@ function buildFallbackItems(mood) {
       id: `${mood}-${index}`,
       title: item.title,
       channel: item.channel,
-      thumbnail: `https://via.placeholder.com/320x180.png?text=${encodeURIComponent(item.title)}`,
+      thumbnail: null,
       youtubeId: null,
       url: `https://www.youtube.com/results?search_query=${encodeURIComponent(item.query)}`,
     }),
