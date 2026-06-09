@@ -9,6 +9,7 @@ export default function MusicSuggestions({ emotion }) {
   const [playRequest, setPlayRequest] = useState(0);
   const [loading, setLoading] = useState(false);
   const [warning, setWarning] = useState("");
+  const [isFallbackMode, setIsFallbackMode] = useState(false);
 
   const theme = emotionTheme[emotion] || emotionTheme.neutral;
   const textColor =
@@ -35,6 +36,7 @@ export default function MusicSuggestions({ emotion }) {
     try {
       setLoading(true);
       setWarning("");
+      setIsFallbackMode(false);
 
       const res = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/youtube/search?mood=${emotionKeyword}`,
@@ -44,11 +46,16 @@ export default function MusicSuggestions({ emotion }) {
 
       if (data?.kind === "youtube" && Array.isArray(data.items)) {
         setVideos(data.items);
-        setSelectedVideos(data.items);
+        setSelectedVideos(data.items.filter((item) => item.youtubeId));
+        setIsFallbackMode(Boolean(data.fallback));
         setLoading(false);
 
         if (data.items.length === 0) {
           setWarning("No videos found for this emotion. Try another emotion!");
+        } else if (data.fallback) {
+          setWarning(
+            "YouTube search is rate-limited right now, so these are curated search links instead.",
+          );
         }
 
         return;
@@ -56,7 +63,7 @@ export default function MusicSuggestions({ emotion }) {
 
       const fallbackItems = Array.isArray(data) ? data : [];
       setVideos(fallbackItems);
-      setSelectedVideos(fallbackItems);
+      setSelectedVideos(fallbackItems.filter((item) => item.youtubeId));
       setLoading(false);
 
       if (fallbackItems.length === 0) {
@@ -70,6 +77,8 @@ export default function MusicSuggestions({ emotion }) {
   };
 
   const playVideo = (youtubeId) => {
+    if (!youtubeId) return;
+
     const ordered = [...videos];
     const selectedIndex = ordered.findIndex(
       (video) => video.youtubeId === youtubeId,
@@ -100,7 +109,9 @@ export default function MusicSuggestions({ emotion }) {
 
       {/* Warning */}
       {warning && (
-        <p className="text-red-400 text-xs sm:text-sm mb-3">{warning}</p>
+        <p className="text-amber-300 text-xs sm:text-sm mb-3 leading-relaxed">
+          {warning}
+        </p>
       )}
 
       {/* Playlists */}
@@ -146,17 +157,33 @@ export default function MusicSuggestions({ emotion }) {
 
               {/* Buttons */}
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-4">
-                <button
-                  onClick={() => playVideo(p.youtubeId)}
-                  className="
-                    px-4 py-2 rounded-full 
-                    bg-[#ff0000] text-white font-semibold
-                    shadow-md hover:bg-[#cc0000] 
-                    transition-all text-sm sm:text-base
-                  "
-                >
-                  ▶ Play
-                </button>
+                {p.youtubeId ? (
+                  <button
+                    onClick={() => playVideo(p.youtubeId)}
+                    className="
+                      px-4 py-2 rounded-full 
+                      bg-[#ff0000] text-white font-semibold
+                      shadow-md hover:bg-[#cc0000] 
+                      transition-all text-sm sm:text-base
+                    "
+                  >
+                    ▶ Play
+                  </button>
+                ) : (
+                  <a
+                    href={p.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="
+                      px-4 py-2 rounded-full 
+                      bg-[#ff0000] text-white font-semibold
+                      shadow-md hover:bg-[#cc0000] 
+                      transition-all text-sm sm:text-base
+                    "
+                  >
+                    ▶ Open Search
+                  </a>
+                )}
 
                 {/* YouTube */}
                 <a
@@ -180,7 +207,7 @@ export default function MusicSuggestions({ emotion }) {
       </div>
 
       {/* Music Player */}
-      {selectedVideos.length > 0 && (
+      {!isFallbackMode && selectedVideos.length > 0 && (
         <div className="mt-6">
           <MusicPlayer
             tracks={selectedVideos}

@@ -64,6 +64,107 @@ const searchPresets = [
   },
 ];
 
+const fallbackSuggestions = {
+  happy: [
+    {
+      title: "Bollywood Happy Songs",
+      channel: "Curated mood search",
+      query: "bollywood happy songs",
+    },
+    {
+      title: "Feel Good Hindi Songs",
+      channel: "Curated mood search",
+      query: "feel good hindi songs",
+    },
+    {
+      title: "Indian Party Songs",
+      channel: "Curated mood search",
+      query: "indian party songs",
+    },
+  ],
+  sad: [
+    {
+      title: "Bollywood Sad Songs",
+      channel: "Curated mood search",
+      query: "bollywood sad songs",
+    },
+    {
+      title: "Hindi Heartbreak Songs",
+      channel: "Curated mood search",
+      query: "hindi heartbreak songs",
+    },
+    {
+      title: "Soft Hindi Songs",
+      channel: "Curated mood search",
+      query: "soft hindi songs",
+    },
+  ],
+  angry: [
+    {
+      title: "Bollywood Motivation Songs",
+      channel: "Curated mood search",
+      query: "bollywood motivation songs",
+    },
+    {
+      title: "Hindi Workout Songs",
+      channel: "Curated mood search",
+      query: "hindi workout songs",
+    },
+    {
+      title: "High Energy Indian Songs",
+      channel: "Curated mood search",
+      query: "high energy indian songs",
+    },
+  ],
+  fearful: [
+    {
+      title: "Calm Hindi Music",
+      channel: "Curated mood search",
+      query: "calm hindi music",
+    },
+    {
+      title: "Relaxing Bollywood Songs",
+      channel: "Curated mood search",
+      query: "relaxing bollywood songs",
+    },
+    {
+      title: "Hindi Lo-fi Music",
+      channel: "Curated mood search",
+      query: "hindi lo-fi music",
+    },
+  ],
+  neutral: [
+    {
+      title: "Hindi Chill Songs",
+      channel: "Curated mood search",
+      query: "hindi chill songs",
+    },
+    {
+      title: "Bollywood Acoustic Songs",
+      channel: "Curated mood search",
+      query: "bollywood acoustic songs",
+    },
+    {
+      title: "Relaxing Hindi Songs",
+      channel: "Curated mood search",
+      query: "relaxing hindi songs",
+    },
+  ],
+};
+
+function buildFallbackItems(mood) {
+  return (fallbackSuggestions[mood] || fallbackSuggestions.neutral).map(
+    (item, index) => ({
+      id: `${mood}-${index}`,
+      title: item.title,
+      channel: item.channel,
+      thumbnail: `https://via.placeholder.com/320x180.png?text=${encodeURIComponent(item.title)}`,
+      youtubeId: null,
+      url: `https://www.youtube.com/results?search_query=${encodeURIComponent(item.query)}`,
+    }),
+  );
+}
+
 async function searchYouTubeVideos(apiKey, queries) {
   const results = [];
 
@@ -94,6 +195,10 @@ async function searchYouTubeVideos(apiKey, queries) {
           `YouTube search query[${queryIndex}] (${preset.label}) failed:`,
           err.response?.data || err.message,
         );
+
+        if (err.response?.status === 429) {
+          return null;
+        }
       }
     }
 
@@ -135,7 +240,17 @@ exports.searchVideos = async (req, res) => {
     console.log("searchVideos called with mood=", rawMood, "resolved=", mood);
 
     const videos = await searchYouTubeVideos(apiKey, queries);
+
+    if (!videos) {
+      console.log("YouTube quota exhausted, using fallback suggestions");
+      return res.json({ kind: "youtube", items: buildFallbackItems(mood), fallback: true });
+    }
+
     console.log("YouTube search returned", videos.length, "unique videos");
+
+    if (videos.length === 0) {
+      return res.json({ kind: "youtube", items: buildFallbackItems(mood), fallback: true });
+    }
 
     return res.json({ kind: "youtube", items: videos.slice(0, 12) });
   } catch (err) {
