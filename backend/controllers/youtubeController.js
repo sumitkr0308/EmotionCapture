@@ -8,60 +8,96 @@ const moodQueries = {
     "hindi upbeat dance songs",
     "indian party songs",
     "bollywood celebration songs",
+    "feel good hindi songs",
   ],
   sad: [
     "bollywood sad songs",
     "hindi heartbreak songs",
     "emotional indian songs",
     "sad bollywood songs",
+    "hindi soft songs",
   ],
   angry: [
     "bollywood motivation songs",
     "hindi workout songs",
     "high energy indian songs",
     "pump up bollywood songs",
+    "hindi power songs",
   ],
   fearful: [
     "calm hindi music",
     "relaxing bollywood songs",
     "soothing indian songs",
     "hindi lo-fi music",
+    "ambient hindi music",
   ],
   neutral: [
     "hindi chill songs",
     "bollywood acoustic songs",
     "indian soft music",
     "hindi lo-fi songs",
+    "relaxing hindi songs",
   ],
 };
 
+const searchPresets = [
+  {
+    label: "strict-in",
+    params: {
+      videoEmbeddable: "true",
+      safeSearch: "none",
+      regionCode: "IN",
+    },
+  },
+  {
+    label: "in",
+    params: {
+      safeSearch: "none",
+      regionCode: "IN",
+    },
+  },
+  {
+    label: "global",
+    params: {
+      safeSearch: "none",
+    },
+  },
+];
+
 async function searchYouTubeVideos(apiKey, queries) {
-  const responses = await Promise.all(
-    queries.map((q) =>
-      axios
-        .get(YOUTUBE_SEARCH_URL, {
+  const results = [];
+
+  for (const [queryIndex, query] of queries.entries()) {
+    let response = null;
+
+    for (const preset of searchPresets) {
+      try {
+        response = await axios.get(YOUTUBE_SEARCH_URL, {
           params: {
             key: apiKey,
-            q,
+            q: query,
             part: "snippet",
             type: "video",
             maxResults: 8,
-            videoEmbeddable: "true",
-            safeSearch: "none",
-            regionCode: "IN",
+            ...preset.params,
           },
-        })
-        .catch(() => null),
-    ),
-  );
+        });
 
-  const results = [];
+        const items = response?.data?.items || [];
+        console.log(
+          `YouTube search query[${queryIndex}] (${preset.label}) returned ${items.length} results`,
+        );
 
-  responses.forEach((resp, index) => {
-    const items = resp?.data?.items || [];
-    console.log(
-      `YouTube search query[${index}] returned ${items.length} results`,
-    );
+        if (items.length > 0) break;
+      } catch (err) {
+        console.log(
+          `YouTube search query[${queryIndex}] (${preset.label}) failed:`,
+          err.response?.data || err.message,
+        );
+      }
+    }
+
+    const items = response?.data?.items || [];
 
     items.forEach((item) => {
       const youtubeId = item?.id?.videoId;
@@ -78,7 +114,7 @@ async function searchYouTubeVideos(apiKey, queries) {
         url: `https://www.youtube.com/watch?v=${youtubeId}`,
       });
     });
-  });
+  }
 
   return Array.from(
     new Map(results.map((item) => [item.youtubeId, item])).values(),
