@@ -1,1 +1,35 @@
 @import "tailwindcss";
+
+html,
+body,
+#root {
+	width: 100%;
+	min-height: 100%;
+}
+
+body {
+	overflow-x: hidden;
+}
+
+.music-scroll,
+.wellness-scroll {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(255, 255, 255, 0.35) rgba(255, 255, 255, 0.08);
+}
+
+.music-scroll::-webkit-scrollbar,
+.wellness-scroll::-webkit-scrollbar {
+	width: 8px;
+}
+
+.music-scroll::-webkit-scrollbar-track,
+.wellness-scroll::-webkit-scrollbar-track {
+	background: rgba(255, 255, 255, 0.08);
+	border-radius: 9999px;
+}
+
+.music-scroll::-webkit-scrollbar-thumb,
+.wellness-scroll::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.35);
+	border-radius: 9999px;
+}

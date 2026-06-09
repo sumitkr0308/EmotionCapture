@@ -57,7 +57,7 @@ Displays confidence percentage
 
 Smart Recommendation System
 
-Suggests YouTube/Spotify music
+Suggests YouTube music
 
 Suggests exercise/wellness routines
 
@@ -107,24 +107,24 @@ CORS
 📁 Folder Structure
 EmotionCapture/
 ├── client/
-│   ├── public/
-│   │   └── models/        # face-api.js model files
-│   ├── src/
-│   │   ├── components/
-│   │   ├── services/
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── index.html
-│   ├── tailwind.config.js
-│   └── package.json
+│ ├── public/
+│ │ └── models/ # face-api.js model files
+│ ├── src/
+│ │ ├── components/
+│ │ ├── services/
+│ │ ├── App.jsx
+│ │ └── main.jsx
+│ ├── index.html
+│ ├── tailwind.config.js
+│ └── package.json
 │
 └── server/
-    ├── controllers/
-    ├── models/
-    ├── routes/
-    ├── server.js
-    ├── .env
-    └── package.json
+├── controllers/
+├── models/
+├── routes/
+├── server.js
+├── .env
+└── package.json
 
 🔧 Setup Instructions
 Step 1 — Clone the repository
@@ -153,7 +153,6 @@ Create this folder:
 
 client/public/models/
 
-
 Download the following models from the official face-api.js GitHub repository:
 
 tiny_face_detector_model-weights_manifest.json
@@ -169,7 +168,6 @@ Start Backend
 cd server
 npm run dev
 
-
 Runs at:
 
 http://localhost:5000
@@ -178,11 +176,9 @@ Start Frontend
 cd client
 npm run dev
 
-
 Runs at:
 
 http://localhost:5173
-
 
 Allow camera access when prompted.
 
@@ -198,29 +194,24 @@ Exercise Suggestions
 GET /api/suggestions/exercise/:emotion
 
 🔍 How EmotionCapture Works
-Frontend Workflow
+EmotionCapture follows a simple real-time loop:
 
-User opens the application
-
-Camera feed activates
-
-face-api.js detects the face
-
-Expression model identifies the dominant emotion
-
-UI displays the results
-
-Emotion is logged to backend
-
-Application shows music & exercise suggestions
+1. The user opens the app and the webcam panel becomes active.
+2. face-api.js detects the face and predicts the dominant emotion in the browser.
+3. The emotion is sent to the UI state, which instantly updates the dashboard theme.
+4. The music panel calls the backend YouTube search endpoint using that emotion.
+5. The backend maps the emotion to curated search phrases and returns a list of playable YouTube videos.
+6. The user can click Play on any result to load the draggable player and start the song.
+7. The wellness panel shows mood-light YouTube suggestions and short activities that match the same emotion.
+8. The camera result, music, and wellness suggestions stay in sync so the whole dashboard feels personalized.
 
 Backend Workflow
 
-Receives emotion logs
+The backend receives emotion requests from the frontend, queries YouTube using the configured API key, and returns a normalized JSON response containing video titles, thumbnails, channels, and URLs.
 
-Stores them in MongoDB
+Frontend Workflow
 
-Returns customized suggestions
+The frontend handles camera capture, emotion detection, dashboard styling, search results, the draggable YouTube player, and the mood-light wellness cards.
 
 😀 Supported Emotions
 
@@ -242,11 +233,11 @@ Disgusted
 /assets/EmotionCapture_Logo.png  
 /assets/EmotionCapture_Banner.png  
 /assets/UI_Screenshot_1.png  
-/assets/UI_Screenshot_2.png  
+/assets/UI_Screenshot_2.png
 
 🔮 Future Enhancements
 
-Spotify API integration
+YouTube search and embed integration
 
 Advanced ML model for higher accuracy
 

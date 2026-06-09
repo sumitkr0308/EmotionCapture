@@ -4,9 +4,15 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 
 const emotionRoutes = require("./routes/emotions");
-const spotifyRoutes = require("./routes/spotify");
+const youtubeRoutes = require("./routes/youtube");
 
 const app = express();
+
+// Simple request logger for debugging
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+  next();
+});
 
 // ---------------------------------------------
 // FIXED CORS FOR EXPRESS v5 / NODE 22
@@ -16,15 +22,13 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://127.0.0.1:5173",
-      process.env.FRONTEND_URL
+      process.env.FRONTEND_URL,
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"]
-  })
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
 );
-
-
 
 // ---------------------------------------------
 // Parsers
@@ -41,7 +45,7 @@ app.get("/", (req, res) => res.send("API is up"));
 // API Routes
 // ---------------------------------------------
 app.use("/api/emotions", emotionRoutes);
-app.use("/api/spotify", spotifyRoutes);
+app.use("/api/youtube", youtubeRoutes);
 
 // ---------------------------------------------
 // Start Server
