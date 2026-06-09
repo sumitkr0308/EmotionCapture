@@ -243,13 +243,21 @@ exports.searchVideos = async (req, res) => {
 
     if (!videos) {
       console.log("YouTube quota exhausted, using fallback suggestions");
-      return res.json({ kind: "youtube", items: buildFallbackItems(mood), fallback: true });
+      return res.json({
+        kind: "youtube",
+        items: buildFallbackItems(mood),
+        fallback: true,
+      });
     }
 
     console.log("YouTube search returned", videos.length, "unique videos");
 
     if (videos.length === 0) {
-      return res.json({ kind: "youtube", items: buildFallbackItems(mood), fallback: true });
+      return res.json({
+        kind: "youtube",
+        items: buildFallbackItems(mood),
+        fallback: true,
+      });
     }
 
     return res.json({ kind: "youtube", items: videos.slice(0, 12) });
